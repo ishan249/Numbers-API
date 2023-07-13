@@ -1,22 +1,39 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+const express = require('express');
+const axios = require('axios');
 
 const app = express();
-app.use(cors());
-app.use(express.json())
 
-const oddNumber = require("./routes/odd");
-const fiboNumber = require("./routes/fibonacci");
-const randNumber = require("./routes/random");
-const primeNumber = require("./routes/prime");
+app.get('/numbers', async (req, res) => {
+  try {
+    const { url } = req.query;
 
-app.use('/odd', oddNumber);
-app.use('/fibo', fiboNumber);
-app.use('/rand', randNumber);
-app.use('/primes', primeNumber);
+    if (!url) {
+      return res.status(400).json({ message: 'URL parameter is required' });
+    }
 
-app.listen(8000, (req,res)=>{
-    console.log("server is listening on 8000");
-})
+    const urls = Array.isArray(url) ? url : [url];
 
+    const requests = urls.map(async (url) => {
+      try {
+        const response = await axios.get(url);
+        return response.data.numbers;
+      } catch (error) {
+        console.error(`Error fetching numbers from ${url}: ${error.message}`);
+        return [];
+      }
+    });
+
+    const numbers = await Promise.all(requests);
+    const combinedNumbers = numbers.flat().filter((value, index, self) => self.indexOf(value) === index);
+    const sortedNumbers = combinedNumbers.sort((a, b) => a - b);
+
+    res.json({ numbers: combinedNumbers });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.listen(8000, () => {
+  console.log('server is listening on port 8000');
+});
