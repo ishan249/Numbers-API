@@ -1,14 +1,14 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
 
 const app = express();
 
-app.get('/numbers', async (req, res) => {
+app.get("/numbers", async (req, res) => {
   try {
     const { url } = req.query;
 
     if (!url) {
-      return res.status(400).json({ message: 'URL parameter is required' });
+      return res.status(400).json({ message: "URL parameter is empty" });
     }
 
     const urls = Array.isArray(url) ? url : [url];
@@ -24,16 +24,17 @@ app.get('/numbers', async (req, res) => {
     });
 
     const numbers = await Promise.all(requests);
-    const combinedNumbers = numbers.flat().filter((value, index, self) => self.indexOf(value) === index);
+    const combinedNumbers = numbers
+      .flat()
+      .filter((value, index, self) => self.indexOf(value) === index);
     const sortedNumbers = combinedNumbers.sort((a, b) => a - b);
 
     res.json({ numbers: combinedNumbers });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.log(error);
   }
 });
 
 app.listen(8000, () => {
-  console.log('server is listening on port 8000');
+  console.log("server is listening on port 8000");
 });
